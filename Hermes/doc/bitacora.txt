@@ -1,0 +1,14 @@
+# Keystores
+
+El keystore para el modo debug es creado por eclipse en ~/.android/debug.keystore
+La clave del keystore, por default es 'android'
+Para conocer el SHA1 de este keystore hacer keytool -list -v -keystore .android/debug.keystore o bien ir a Windows -> preferences ->Android -> build ->default debug keystore path will be there
+Eclipse firma la aplicacion con este keystore cuando se le da Run o Debug
+
+El keystore para el modo release es para firmar la aplicacion cuano se genera un APK.
+Es necesario volver a generar un APK firmado cada vez que se hace un cambio en el codigo.
+El Keystore se lo pude crear en el mismo asistente para generar APKs firmados de Eclipse.
+Clic derecho en el package explorer, export, android, export android aplication y seguir las instrucciones.
+
+Los SHA1 de cada keystore deberan estar registrados en https://console.developers.google.com/ si se desea ocupar el modo debug/release.
+Y en el Manifest debe figurar el API key correspondiente
