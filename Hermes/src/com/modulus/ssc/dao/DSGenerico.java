@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 public abstract class DSGenerico<T> {
 	protected SQLiteDatabase db;
 	protected SSCSQLiteHelper helper;
+	protected Context context;
 
 	public abstract List<T> getAll();
 
@@ -18,8 +19,9 @@ public abstract class DSGenerico<T> {
 
 	public abstract void delete(T entity);
 
-	public DSGenerico(SSCSQLiteHelper helper) {
+	public DSGenerico(Context context, SSCSQLiteHelper helper) {
 		this.helper = helper;
+		this.context = context;
 	}
 
 	public void open() throws SQLException {

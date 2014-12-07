@@ -12,9 +12,6 @@ import com.modulus.ssc.dao.DSEmpresa;
 import com.modulus.ssc.dao.DSLinea;
 import com.modulus.ssc.dao.SSCSQLiteHelper;
 import com.modulus.ssc.model.Empresa;
-import com.modulus.ssc.model.Linea;
-import com.modulus.ssc.model.Recorrido;
-import com.modulus.ssc.model.RecorridoPunto;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -28,7 +25,6 @@ public class ActivityMain extends Activity {
 			new LatLng(37.35, -122.2), new LatLng(37.35, -122.0));
 
 	private GoogleMap myMap;
-	private Linea linea;
 	DSLinea dsLinea;
 	DSEmpresa dsEmpresa;
 
@@ -41,42 +37,37 @@ public class ActivityMain extends Activity {
 				.getMap();
 		Polygon polygon = myMap.addPolygon(rectOptions);
 		myMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-		
+
 		Log.i(TAG_SSC, "Se va a inicializar");
 		inicializar();
 
 	}
 
 	private void inicializar() {
-		//dsLinea = new DSLinea(this);
+		// dsLinea = new DSLinea(this);
 		SSCSQLiteHelper helper = new SSCSQLiteHelper(this);
-		dsEmpresa = new DSEmpresa(helper);
+		dsEmpresa = new DSEmpresa(this, helper);
 		dsEmpresa.open();
-		
+
 		Empresa empresa = new Empresa();
 		empresa.setNombre("Ataco");
 		long id = dsEmpresa.create(empresa);
 		empresa.setId(id);
-		Log.e(TAG_SSC, "Se ha insertado la empresa con el id "+ id);
-		
+		Log.e(TAG_SSC, "Se ha insertado la empresa con el id " + id);
+
 		List<Empresa> empresas = dsEmpresa.getAll();
-		Log.e(TAG_SSC, "Se han encontrado " + empresas.size()+" empresas en la base de datos-");
-		
-		
+		Log.e(TAG_SSC, "Se han encontrado " + empresas.size()
+				+ " empresas en la base de datos-");
 
-		
-		dsEmpresa.close();
+		helper.close();
 		/*
-		Recorrido recorrido = new Recorrido();
-		
-		
-		RecorridoPunto recorridoPunto = new RecorridoPunto();
-
-		linea = new Linea();
-		linea.setNumero("3");
-		linea.setRamal("A");
-		linea.setEmpresa(empresa);
-		linea = dsLinea.create(linea);
-		*/
+		 * Recorrido recorrido = new Recorrido();
+		 * 
+		 * 
+		 * RecorridoPunto recorridoPunto = new RecorridoPunto();
+		 * 
+		 * linea = new Linea(); linea.setNumero("3"); linea.setRamal("A");
+		 * linea.setEmpresa(empresa); linea = dsLinea.create(linea);
+		 */
 	}
 }

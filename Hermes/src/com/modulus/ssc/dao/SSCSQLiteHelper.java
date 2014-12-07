@@ -10,7 +10,7 @@ import android.util.Log;
 public class SSCSQLiteHelper extends SQLiteOpenHelper {
 
 	private static final String DATABASE_NAME = "ssc.db";
-	private static final int DATABASE_VERSION = 6;
+	private static final int DATABASE_VERSION = 7;
 
 	// Database creation sql statements
 

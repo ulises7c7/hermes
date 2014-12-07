@@ -18,8 +18,8 @@ public class DSRecorrido extends DSGenerico<Recorrido> {
 			+ " integer primary key autoincrement, " + COL_LINEA_FK
 			+ " integer not null " + ");";
 
-	public DSRecorrido(SSCSQLiteHelper context) {
-		super(context);
+	public DSRecorrido(Context context, SSCSQLiteHelper helper) {
+		super(context, helper);
 		// TODO Auto-generated constructor stub
 	}
 

@@ -4,12 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.modulus.ssc.model.Empresa;
-import com.modulus.ssc.view.ActivityMain;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 
 public class DSEmpresa extends DSGenerico<Empresa> {
 
@@ -24,8 +22,8 @@ public class DSEmpresa extends DSGenerico<Empresa> {
 
 	private String[] columnas = { COL_ID, COL_NOMBRE };
 
-	public DSEmpresa(SSCSQLiteHelper helper) {
-		super(helper);
+	public DSEmpresa(Context context, SSCSQLiteHelper helper) {
+		super(context, helper);
 	}
 
 	@Override
@@ -54,37 +52,9 @@ public class DSEmpresa extends DSGenerico<Empresa> {
 
 	@Override
 	public long create(Empresa empresa) {
-		/*
-		String mySql = " SELECT name FROM sqlite_master "
-				+ " WHERE type='table'             "
-				+ "   AND name LIKE 'PR_%' ";
-		Cursor c = db.rawQuery(mySql, null);
-
-		List<String> todoItems = new ArrayList<String>();
-
-		if (c.moveToFirst()) {
-			do {
-				todoItems.add(c.getString(0));
-
-			} while (c.moveToNext());
-		}
-		if (todoItems.size() >= 0) {
-			for (int i = 0; i < todoItems.size(); i++) {
-				Log.i(ActivityMain.TAG_SSC, todoItems.get(i) + "");
-			}
-		}else{
-			Log.i(ActivityMain.TAG_SSC, "No se encontro ningun item");
-		}
-      */
-		
 		ContentValues values = new ContentValues();
 		values.put(COL_NOMBRE, empresa.getNombre());
 		long insertId = db.insert(TABLE_EMPRESAS, null, values);
-		/*
-		 * Cursor cursor = db.query(TABLE_EMPRESAS, columnas, COL_ID + " = " +
-		 * insertId, null, null, null, null); cursor.moveToFirst(); Empresa
-		 * newEmpresa = cursorTo(cursor); cursor.close();
-		 */
 		return insertId;
 	}
 

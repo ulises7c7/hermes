@@ -6,8 +6,6 @@ import java.util.List;
 import android.content.Context;
 import android.database.Cursor;
 
-import com.modulus.ssc.model.Empresa;
-import com.modulus.ssc.model.Linea;
 import com.modulus.ssc.model.RecorridoPunto;
 
 public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
@@ -31,8 +29,8 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 					COL_RECORRIDO_FK + " integer not null " + 
 					");";
 
-	public DSRecorridoPunto(SSCSQLiteHelper context) {
-		super(context);
+	public DSRecorridoPunto(Context context, SSCSQLiteHelper helper) {
+		super(context, helper);
 	}
 
 	@Override

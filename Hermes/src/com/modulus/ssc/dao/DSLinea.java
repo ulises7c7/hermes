@@ -34,8 +34,8 @@ public class DSLinea extends DSGenerico<Linea> {
 			COL_RAMAL,
 			COL_EMPRESA_FK };
 	
-	public DSLinea(SSCSQLiteHelper context) {
-		super(context);
+	public DSLinea(Context context, SSCSQLiteHelper helper) {
+		super(context, helper);
 		Log.i(ActivityMain.TAG_SSC, "Llamada al constructor del datasource");
 	}
 
@@ -62,11 +62,10 @@ public class DSLinea extends DSGenerico<Linea> {
 		linea.setNumero(cursor.getString(1));
 		linea.setRamal(cursor.getString(2));
 		long idEmpresa = cursor.getLong(3);
-		DSEmpresa dsEmpresa = new DSEmpresa(context);
+		DSEmpresa dsEmpresa = new DSEmpresa(context, helper);
 		dsEmpresa.open();
 		Empresa empresa = dsEmpresa.getById(idEmpresa);
 		linea.setEmpresa(empresa);
-		dsEmpresa.close();
 		
 		
 		
