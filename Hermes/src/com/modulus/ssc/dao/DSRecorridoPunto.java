@@ -3,9 +3,11 @@ package com.modulus.ssc.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
+import com.modulus.ssc.model.Empresa;
 import com.modulus.ssc.model.RecorridoPunto;
 
 public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
@@ -17,37 +19,38 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 	public static final String COL_LNG = "lng";
 	public static final String COL_ORDEN = "orden";
 	public static final String COL_RECORRIDO_FK = "id_recorrido";
-	
-	private String[] columnas = {COL_ID, COL_LAT, COL_LNG, COL_ORDEN, COL_RECORRIDO_FK};
 
-	public static final String CREATE_TABLE_RECORRIDO_PUNTOS = 
-			"CREATE TABLE " + TABLE_RECORRIDOS_PUNTOS + "(" + 
-					COL_ID + " integer primary key autoincrement, " + 
-					COL_LAT + " real not null," + 
-					COL_LNG + " real not null," + 
-					COL_ORDEN + " integer," + 
-					COL_RECORRIDO_FK + " integer not null " + 
-					");";
+	private String[] columnas = { COL_ID, COL_LAT, COL_LNG, COL_ORDEN,
+			COL_RECORRIDO_FK };
 
-	public DSRecorridoPunto(Context context, SSCSQLiteHelper helper) {
-		super(context, helper);
+	public static final String CREATE_TABLE_RECORRIDO_PUNTOS = "CREATE TABLE "
+			+ TABLE_RECORRIDOS_PUNTOS + "(" + COL_ID
+			+ " integer primary key autoincrement, " + COL_LAT
+			+ " real not null," + COL_LNG + " real not null," + COL_ORDEN
+			+ " integer," + COL_RECORRIDO_FK + " integer not null " + ");";
+
+	public DSRecorridoPunto(Context context) {
+		super(context);
 	}
 
 	@Override
 	public List<RecorridoPunto> getAll() {
+		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	public List<RecorridoPunto> getByRecorrido(long idRecorrido) {
 		List<RecorridoPunto> puntosRecorido = new ArrayList<RecorridoPunto>();
 
-		Cursor cursor = db.query(TABLE_RECORRIDOS_PUNTOS, columnas, null,
-				null, null, null, null);
+		Cursor cursor = db.query(TABLE_RECORRIDOS_PUNTOS, columnas, null, null,
+				null, null, null);
 
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 			RecorridoPunto punto = cursorTo(cursor);
-			puntosRecorido.add(punto);
+			if (punto.getRecorrido().getId() == idRecorrido) {
+				puntosRecorido.add(punto);
+			}
 			cursor.moveToNext();
 		}
 		// make sure to close the cursor
@@ -55,7 +58,7 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 		return puntosRecorido;
 	}
 
-	
+
 	private RecorridoPunto cursorTo(Cursor cursor) {
 		RecorridoPunto punto = new RecorridoPunto();
 		punto.setId(cursor.getLong(0));
@@ -63,12 +66,15 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 		punto.setLng(cursor.getDouble(2));
 		return punto;
 	}
-	
-	
+
 	@Override
-	public long create(RecorridoPunto entity) {
-		// TODO Auto-generated method stub
-		return 0L;
+	public long create(RecorridoPunto punto) {
+		ContentValues values = new ContentValues();
+		values.put(COL_LAT, punto.getLat());
+		values.put(COL_LNG, punto.getLng());
+		values.put(COL_ORDEN, 0);
+		values.put(COL_RECORRIDO_FK, punto.getRecorrido().getId());
+		return db.insert(TABLE_RECORRIDOS_PUNTOS, null, values);
 	}
 
 	@Override

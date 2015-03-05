@@ -1,5 +1,6 @@
 package com.modulus.ssc.dao;
 
+
 import java.util.List;
 
 import android.content.Context;
@@ -19,16 +20,14 @@ public abstract class DSGenerico<T> {
 
 	public abstract void delete(T entity);
 
-	public DSGenerico(Context context, SSCSQLiteHelper helper) {
-		this.helper = helper;
-		this.context = context;
+	public DSGenerico(Context context) {
+		helper = new SSCSQLiteHelper(context);
 	}
 
 	public void open() throws SQLException {
 		db = helper.getWritableDatabase();
 	}
 
-	@Deprecated
 	public void close() {
 		helper.close();
 	}

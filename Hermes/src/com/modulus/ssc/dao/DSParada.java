@@ -25,8 +25,8 @@ public class DSParada extends DSGenerico<Parada> {
 			COL_DESCRIPCION + " text ," + 
 			COL_RECORRIDO_FK + " integer not null " + ");";
 
-	public DSParada(Context context, SSCSQLiteHelper helper) {
-		super(context, helper);
+	public DSParada(Context context) {
+		super(context);
 	}
 	
 	@Override
