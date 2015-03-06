@@ -3,7 +3,6 @@ package com.modulus.ssc.model;
 public class Empresa {
 	
 	private long id;
-	
 	private String nombre;
 
 	public String getNombre() {

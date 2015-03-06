@@ -70,10 +70,10 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 		Log.i(TAG_SSC, "Se establece el content view");
 		setContentView(R.layout.activity_main);
 
-		Log.i(TAG_SSC, "Se instancia al data loader");
-		DemoDataLoader dataLoader = new DemoDataLoader(this);
-		Log.i(TAG_SSC, "Se invoca al data loader");
-		dataLoader.load();
+//		Log.i(TAG_SSC, "Se instancia al data loader");
+//		DemoDataLoader dataLoader = new DemoDataLoader(this);
+//		Log.i(TAG_SSC, "Se invoca al data loader");
+//		dataLoader.load();
 
 		Log.i(TAG_SSC, "Se carga el view del map");
 		myMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
@@ -105,27 +105,32 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 	}
 
 	private void inicializar() {
+		buildGoogleApiClient();
+		
 		dsEmpresa = new DSEmpresa(this);
 		dsEmpresa.open();
-		buildGoogleApiClient();
+		
 
-		Empresa empresa = new Empresa();
-		empresa.setNombre("Ataco");
-		long id = dsEmpresa.create(empresa);
-		empresa.setId(id);
-		Log.e(TAG_SSC, "Se ha insertado la empresa con el id " + id);
+		//Empresa empresa = new Empresa();
+		//empresa.setNombre("Ataco");
+		//long id = dsEmpresa.create(empresa);
+		//empresa.setId(id);
+		//Log.e(TAG_SSC, "Se ha insertado la empresa con el id " + id);
 
-		Context context = getApplicationContext();
-		CharSequence text = "Se ha insertado la empresa " + empresa.getNombre()
-				+ " con el id " + id;
-		int duration = Toast.LENGTH_LONG;
+		//Context context = getApplicationContext();
+		//CharSequence text = "Se ha insertado la empresa " + empresa.getNombre()	+ " con el id " + id;
+		//int duration = Toast.LENGTH_LONG;
 
-		Toast toast = Toast.makeText(context, text, duration);
-		toast.show();
+		//Toast toast = Toast.makeText(context, text, duration);
+		//toast.show();
 
 		List<Empresa> empresas = dsEmpresa.getAll();
 		Log.e(TAG_SSC, "Se han encontrado " + empresas
 				+ " empresas en la base de datos-");
+		
+		if (empresas != null && empresas.size() >= 1){
+			Log.i(TAG_SSC, "La primera empresa encontrada es: " + empresas.get(0).getNombre());
+		}
 
 	}
 
@@ -157,7 +162,6 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 
 	@Override
 	public void onConnected(Bundle arg0) {
-
 		mLastLocation = LocationServices.FusedLocationApi
 				.getLastLocation(mGoogleApiClient);
 		if (mRequestingLocationUpdates) {

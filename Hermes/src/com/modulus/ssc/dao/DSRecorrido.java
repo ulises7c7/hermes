@@ -3,6 +3,7 @@ package com.modulus.ssc.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.SyncStateContract.Columns;
@@ -38,9 +39,10 @@ public class DSRecorrido extends DSGenerico<Recorrido> {
 	}
 
 	@Override
-	public long create(Recorrido entity) {
-		// TODO Auto-generated method stub
-		return 0L;
+	public long create(Recorrido recorrido) {
+		ContentValues values = new ContentValues();
+		values.put(COL_LINEA_FK, recorrido.getLinea().getId());
+		return db.insert(TABLE_RECORRIDOS, null, values);
 	}
 
 	@Override

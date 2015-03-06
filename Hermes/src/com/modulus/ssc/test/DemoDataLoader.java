@@ -19,8 +19,8 @@ import com.modulus.ssc.view.ActivityMain;
 public class DemoDataLoader {
 
 	private List<Empresa> empresas;
-	private List<Linea> lineas;
-	private List<Recorrido> recorridos;
+	private List<Linea> lineas = new ArrayList<Linea>();
+	private List<Recorrido> recorridos = new ArrayList<Recorrido>();
 	DSEmpresa dsEmpresa;
 	DSLinea dsLinea;
 	DSRecorrido dsRecorrido;
@@ -30,6 +30,7 @@ public class DemoDataLoader {
 		dsEmpresa = new DSEmpresa(context);
 		dsLinea = new DSLinea(context);
 		dsRecorrido = new DSRecorrido(context);
+		dsRecorridoPunto = new DSRecorridoPunto(context);
 	}
 
 	private void crearEmpresas() {
@@ -60,6 +61,8 @@ public class DemoDataLoader {
 		dsLinea.open();
 		long id = dsLinea.create(linea);
 		linea.setId(id);
+		
+		lineas.add(linea);
 
 		Log.v(ActivityMain.TAG_SSC, "Insertando linea " + linea.getNumero()
 				+ " " + linea.getRamal() + " con el id " + id);
