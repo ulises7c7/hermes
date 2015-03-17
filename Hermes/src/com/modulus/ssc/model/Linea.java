@@ -1,5 +1,9 @@
 package com.modulus.ssc.model;
 
+import java.util.List;
+
+import com.google.android.gms.maps.model.LatLng;
+
 public class Linea {
 	private long id;
 	private String numero;
@@ -51,4 +55,23 @@ public class Linea {
 	public String toString() {
 		return numero;
 	}
+
+	public static Linea recomendarLinea(List<Linea> lineas, LatLng origen,
+			LatLng destino) {
+
+		Linea lineaElegida = null;
+
+		if (lineas != null && lineas.size() > 0) {
+
+			for (int i = 0; i < lineas.size(); i++) {
+
+			}
+		}
+		return lineaElegida;
+	}
+
+	public Parada recomendarParada(LatLng ubicacion) {
+		return null;
+	}
+
 }

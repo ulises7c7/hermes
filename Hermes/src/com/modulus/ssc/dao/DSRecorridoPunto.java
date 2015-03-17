@@ -8,6 +8,7 @@ import android.content.Context;
 import android.database.Cursor;
 
 import com.modulus.ssc.model.Empresa;
+import com.modulus.ssc.model.Recorrido;
 import com.modulus.ssc.model.RecorridoPunto;
 
 public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
@@ -39,7 +40,7 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 		return null;
 	}
 
-	public List<RecorridoPunto> getByRecorrido(long idRecorrido) {
+	public List<RecorridoPunto> getByRecorrido(Recorrido recorrido) {
 		List<RecorridoPunto> puntosRecorido = new ArrayList<RecorridoPunto>();
 
 		Cursor cursor = db.query(TABLE_RECORRIDOS_PUNTOS, columnas, null, null,
@@ -48,7 +49,7 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 			RecorridoPunto punto = cursorTo(cursor);
-			if (punto.getRecorrido().getId() == idRecorrido) {
+			if (punto.getRecorrido().getId() == recorrido.getId()) {
 				puntosRecorido.add(punto);
 			}
 			cursor.moveToNext();
@@ -64,6 +65,12 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 		punto.setId(cursor.getLong(0));
 		punto.setLat(cursor.getDouble(1));
 		punto.setLng(cursor.getDouble(2));
+		
+		//Recorrido dummy para portar el id_recorrido
+		Recorrido recorrido = new Recorrido();
+		recorrido.setId(cursor.getLong(4));
+		punto.setRecorrido(recorrido);
+		
 		return punto;
 	}
 

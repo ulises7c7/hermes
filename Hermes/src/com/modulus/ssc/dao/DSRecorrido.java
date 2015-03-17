@@ -10,6 +10,7 @@ import android.provider.SyncStateContract.Columns;
 
 import com.modulus.ssc.model.Empresa;
 import com.modulus.ssc.model.Linea;
+import com.modulus.ssc.model.Parada;
 import com.modulus.ssc.model.Recorrido;
 import com.modulus.ssc.model.RecorridoPunto;
 
@@ -54,17 +55,19 @@ public class DSRecorrido extends DSGenerico<Recorrido> {
 	@Override
 	public void delete(Recorrido entity) {
 		// TODO Auto-generated method stub
-
 	}
 
-	public List<Recorrido> getByLinea(long id) {
+	public List<Recorrido> getByLinea(Linea linea) {
+		//TODO: revisar que la linea se este pasando por referencia
+		//TODO: hacer que se devuelva la lista de paradas y puntos del recorrido
 		List<Recorrido> recorridos = new ArrayList<Recorrido>();
 		Cursor cursor = db.query(TABLE_RECORRIDOS, allColumns, null, null,
 				null, null, null);
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 			Recorrido recorrido = cursorTo(cursor);
-			if (id == recorrido.getLinea().getId()) {
+			if (recorrido.getLinea().getId() == linea.getId()) {
+				linea.setRecorrido(recorrido);
 				recorridos.add(recorrido);
 			}
 			cursor.moveToNext();
@@ -78,13 +81,24 @@ public class DSRecorrido extends DSGenerico<Recorrido> {
 		Recorrido recorrido = new Recorrido();
 		recorrido.setId(cursor.getLong(0));
 
-		long idLinea = cursor.getLong(0);
-		DSLinea dsLinea = new DSLinea(context);
-		dsLinea.open();
-		Linea linea = dsLinea.getById(idLinea);
-		dsLinea.close();
+		Linea lineaDummy = new Linea();
+		lineaDummy.setId(cursor.getLong(0));
 
-		recorrido.setLinea(linea);
+		recorrido.setLinea(lineaDummy);
+		
+		DSParada dsParada = new DSParada(context);
+		dsParada.open();
+		List<Parada>paradas = dsParada.getByRecorrido(recorrido);
+		recorrido.setParadas(paradas);
+		dsParada.close();
+		
+		DSRecorridoPunto dsRecorridoPunto = new DSRecorridoPunto(context);
+		dsRecorridoPunto.open();
+		List<RecorridoPunto> puntos = dsRecorridoPunto.getByRecorrido(recorrido);
+		recorrido.setPuntos(puntos);
+		dsParada.close();
+		
+		
 
 		return recorrido;
 	}

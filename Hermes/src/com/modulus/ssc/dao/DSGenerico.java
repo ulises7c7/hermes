@@ -1,6 +1,5 @@
 package com.modulus.ssc.dao;
 
-
 import java.util.List;
 
 import android.content.Context;
@@ -22,6 +21,7 @@ public abstract class DSGenerico<T> {
 
 	public DSGenerico(Context context) {
 		helper = new SSCSQLiteHelper(context);
+		this.context = context;
 	}
 
 	public void open() throws SQLException {

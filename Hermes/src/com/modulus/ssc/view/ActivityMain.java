@@ -1,9 +1,9 @@
 package com.modulus.ssc.view;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -13,125 +13,108 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.CancelableCallback;
+import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.modulus.ssc.R;
-import com.modulus.ssc.dao.DSEmpresa;
-import com.modulus.ssc.model.Empresa;
-import com.modulus.ssc.test.DemoDataLoader;
-
+import com.modulus.ssc.dao.DSLinea;
+import com.modulus.ssc.model.Linea;
+import com.modulus.ssc.model.Recorrido;
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
+import android.text.Html;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.TextView;
 
 public class ActivityMain extends Activity implements ConnectionCallbacks,
-		OnConnectionFailedListener, LocationListener {
+		OnConnectionFailedListener, LocationListener, OnMapClickListener,
+		OnClickListener {
 	public static final String TAG_SSC = "Modulus";
 	private GoogleApiClient mGoogleApiClient;
 	private Location mLastLocation;
 	private LocationRequest mLocationRequest;
 	private GoogleMap myMap;
-	private DSEmpresa dsEmpresa;
+
 	// Utilizado para saber si los servicios de ubicacion estan encendidos
 	private boolean mRequestingLocationUpdates = true;
 	// Momento de la ultima actualizacion de la posicion
 	private String mLastUpdateTime;
+	private PolygonOptions rectOptions;
+	private MarkerOptions markerOptions = new MarkerOptions();
+	private MarkerOptions markerOptionsDes = new MarkerOptions();
 
-	private PolygonOptions rectOptions = new PolygonOptions().add(
-			new LatLng(-27.4559121, -58.98296710000001), 
-			new LatLng(-27.448809700000005,-58.97528530000001), 
-			new LatLng(-27.4496094, -58.9743948),
-			new LatLng(-27.445563, -58.9699531), 
-			new LatLng(-27.442382799999997, -58.97347210000001), 
-			new LatLng(-27.4439634, -58.97519950000001), 
-			new LatLng(-27.442363800000003, -58.97696969999999), 
-			new LatLng(-27.449619, -58.9847803), 
-			new LatLng(-27.4511899,-58.9830101), 
-			new LatLng(-27.4535606, -58.9856386),
-			new LatLng(-27.4559121, -58.98296710000001));
+	private static final int ESTADO_DEF_ORIGEN = 0;
+	private static final int ESTADO_DEF_DESTINO = 1;
+	private Marker markerDes;
+	private Marker markerOrig;
 
-	private CircleOptions currentLocationCircleOptions = new CircleOptions();
+	private float defZoom = 15.2f;
+
+	private TextView txtInstrucciones;
+
+	private LatLng latLngresistencia = new LatLng(-27.451151, -58.986433);
+	private LatLng latLngDef = new LatLng(32.536389, 44.420833);
+
+	private List<Linea> lineas;
+
+	private int estado;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.i(TAG_SSC, "Se llama al metodo inicializar()");
 		inicializar();
-		Log.i(TAG_SSC, "Se establece el content view");
-		setContentView(R.layout.activity_main);
-
-//		Log.i(TAG_SSC, "Se instancia al data loader");
-//		DemoDataLoader dataLoader = new DemoDataLoader(this);
-//		Log.i(TAG_SSC, "Se invoca al data loader");
-//		dataLoader.load();
-
-		Log.i(TAG_SSC, "Se carga el view del map");
-		myMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
-				.getMap();
-
-		Log.i(TAG_SSC, "Se crea el polygon del recorrido");
-		myMap.addPolygon(rectOptions);
-
-		
-		Log.i(TAG_SSC, "current location circle options: "
-				+ currentLocationCircleOptions.getCenter());
-
-		Log.i(TAG_SSC, "Se establece posicion de la camara");
-		myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(
-				-27.451151, -58.986433), 14.0f));
-		Log.i(TAG_SSC, "Se establece tipo de mapa");
-		myMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-		LatLng testLatLng = new LatLng(-27.4559121, -58.98296710000001);
-		currentLocationCircleOptions = new CircleOptions().center(testLatLng)
-				.radius(100).strokeColor(Color.RED).fillColor(Color.BLUE);
-		// myMap.addCircle();
-
-		myMap.addCircle(currentLocationCircleOptions);
-		
-		Log.e(TAG_SSC, "On create - valor de mGoogleApiClient:" + mGoogleApiClient);
-		mGoogleApiClient.connect();
-
+		inicializarMapa();
 	}
 
 	private void inicializar() {
+		setContentView(R.layout.activity_main);
+
+		txtInstrucciones = (TextView) findViewById(R.id.txtInstrucciones);
+		txtInstrucciones.setText(Html
+				.fromHtml("<h1>Indica el origen de tu viaje</h1>"));
+
 		buildGoogleApiClient();
-		
-		dsEmpresa = new DSEmpresa(this);
-		dsEmpresa.open();
-		
+		mGoogleApiClient.connect();
 
-		//Empresa empresa = new Empresa();
-		//empresa.setNombre("Ataco");
-		//long id = dsEmpresa.create(empresa);
-		//empresa.setId(id);
-		//Log.e(TAG_SSC, "Se ha insertado la empresa con el id " + id);
+		lineas = obtenerLineas();
+		Linea linea = lineas.get(0);
+		rectOptions = obtenerPoligono(linea.getRecorrido());
 
-		//Context context = getApplicationContext();
-		//CharSequence text = "Se ha insertado la empresa " + empresa.getNombre()	+ " con el id " + id;
-		//int duration = Toast.LENGTH_LONG;
+	}
 
-		//Toast toast = Toast.makeText(context, text, duration);
-		//toast.show();
+	private void inicializarMapa() {
+		myMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
+				.getMap();
+		myMap.setOnMapClickListener(this);
 
-		List<Empresa> empresas = dsEmpresa.getAll();
-		Log.e(TAG_SSC, "Se han encontrado " + empresas
-				+ " empresas en la base de datos-");
-		
-		if (empresas != null && empresas.size() >= 1){
-			Log.i(TAG_SSC, "La primera empresa encontrada es: " + empresas.get(0).getNombre());
+		LatLng initLatLng;
+		if (mLastLocation == null) {
+			initLatLng = latLngresistencia;
+		} else {
+			initLatLng = new LatLng(mLastLocation.getLatitude(),
+					mLastLocation.getLongitude());
 		}
 
+		myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initLatLng, defZoom));
+
+		// Marcador Origen
+		markerOptions.position(latLngDef);
+		markerOrig = myMap.addMarker(markerOptions);
+		markerOrig.setTitle("Origen");
+
+		// Marcador Destino
+		markerOptionsDes.position(latLngDef);
+		markerDes = myMap.addMarker(markerOptionsDes);
+		markerDes.setTitle("Destino");
+
+		myMap.addPolygon(rectOptions);
 	}
 
 	protected synchronized void buildGoogleApiClient() {
@@ -140,9 +123,6 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 				.addOnConnectionFailedListener(this)
 				.addApi(LocationServices.API).build();
 		createLocationRequest();
-		
-		Log.e(TAG_SSC, "se ha llamado a buildGoogleApiClient: " + mGoogleApiClient);
-		
 	}
 
 	// Se inicializa el Location request
@@ -154,7 +134,6 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 		mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 	}
 
-	//
 	protected void startLocationUpdates() {
 		LocationServices.FusedLocationApi.requestLocationUpdates(
 				mGoogleApiClient, mLocationRequest, this);
@@ -167,9 +146,6 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 		if (mRequestingLocationUpdates) {
 			startLocationUpdates();
 		}
-
-		Log.i(TAG_SSC, "On connected - Valor de mLastLocation: "
-				+ mLastLocation);
 
 		updateUI();
 	}
@@ -195,14 +171,143 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 	}
 
 	private void updateUI() {
-		if (mLastLocation != null) {
-			LatLng latLng = new LatLng(mLastLocation.getLatitude(),
-					mLastLocation.getLongitude());
-			currentLocationCircleOptions.center(latLng);
-			myMap.addCircle(currentLocationCircleOptions);
+		// if (mLastLocation != null) {
+		// LatLng latLng = new LatLng(mLastLocation.getLatitude(),
+		// mLastLocation.getLongitude());
+		// markerCurr.setPosition(latLng);
+		//
+		// }
+
+	}
+
+	private PolygonOptions obtenerPoligono(Recorrido recorrido) {
+		ArrayList<LatLng> puntos = new ArrayList<LatLng>();
+		for (int i = 0; i < recorrido.getPuntos().size(); i++) {
+			double latitude = recorrido.getPuntos().get(i).getLat();
+			double longitude = recorrido.getPuntos().get(i).getLng();
+			LatLng p = new LatLng(latitude, longitude);
+			puntos.add(p);
 		}
-		
-		Log.e(TAG_SSC, "se ha llamado a udpadeUI: " + currentLocationCircleOptions.getCenter().latitude + "," + currentLocationCircleOptions.getCenter().longitude );
+		PolygonOptions poligono = new PolygonOptions().addAll(puntos);
+
+		return poligono;
+
+	}
+
+	@Override
+	public void onMapClick(LatLng latlng) {
+
+		switch (estado) {
+		case ESTADO_DEF_ORIGEN:
+			markerOrig.setPosition(latlng);
+			estado = ESTADO_DEF_DESTINO;
+			txtInstrucciones.setText(Html
+					.fromHtml("<h1>Indica el destino de tu viaje</h1>"));
+			break;
+		case ESTADO_DEF_DESTINO:
+			markerDes.setPosition(latlng);
+			break;
+
+		default:
+			break;
+		}
+
+	}
+
+	@Override
+	public void onClick(View v) {
+
+	}
+
+	public void animateCameraTo(final double lat, final double lng) {
+
+		CameraPosition camPosition = myMap.getCameraPosition();
+		if (!((Math.floor(camPosition.target.latitude * 100) / 100) == (Math
+				.floor(lat * 100) / 100) && (Math
+				.floor(camPosition.target.longitude * 100) / 100) == (Math
+				.floor(lng * 100) / 100))) {
+			myMap.getUiSettings().setScrollGesturesEnabled(false);
+			myMap.animateCamera(
+					CameraUpdateFactory.newLatLng(new LatLng(lat, lng)),
+					new CancelableCallback() {
+
+						@Override
+						public void onFinish() {
+							myMap.getUiSettings()
+									.setScrollGesturesEnabled(true);
+
+						}
+
+						@Override
+						public void onCancel() {
+							myMap.getUiSettings().setAllGesturesEnabled(true);
+
+						}
+					});
+		}
+
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putDouble("oLat", markerOrig.getPosition().latitude);
+		outState.putDouble("oLng", markerOrig.getPosition().longitude);
+		outState.putDouble("dLat", markerDes.getPosition().latitude);
+		outState.putDouble("dLng", markerDes.getPosition().longitude);
+
+		outState.putDouble("camLat", myMap.getCameraPosition().target.latitude);
+		outState.putDouble("camLng", myMap.getCameraPosition().target.longitude);
+		outState.putFloat("camZoom", myMap.getCameraPosition().zoom);
+
+		outState.putCharSequence("txtInst", txtInstrucciones.getText());
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		Double oLat = savedInstanceState.getDouble("oLat");
+		Double oLng = savedInstanceState.getDouble("oLng");
+		Double dLat = savedInstanceState.getDouble("dLat");
+		Double dLng = savedInstanceState.getDouble("dLng");
+		Double camLat = savedInstanceState.getDouble("camLat");
+		Double camLng = savedInstanceState.getDouble("camLng");
+		Float camZoom = savedInstanceState.getFloat("camZoom");
+		CharSequence txtInst = savedInstanceState.getCharSequence("txtInst");
+
+		txtInstrucciones.setText(txtInst);
+		myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(camLat,
+				camLng), camZoom));
+		markerDes.setPosition(new LatLng(dLat, dLng));
+		markerOrig.setPosition(new LatLng(oLat, oLng));
+	}
+
+	private List<Linea> obtenerLineas() {
+		DSLinea dsLinea;
+		dsLinea = new DSLinea(this);
+		dsLinea.open();
+		List<Linea> ls = dsLinea.getAll();
+		dsLinea.close();
+		return ls;
+	}
+
+	@Override
+	public void onBackPressed() {
+		switch (estado) {
+		case ESTADO_DEF_ORIGEN:
+			super.onBackPressed();
+			break;
+		case ESTADO_DEF_DESTINO:
+			estado--;
+			animateCameraTo(markerOrig.getPosition().latitude,
+					markerOrig.getPosition().longitude);
+			txtInstrucciones.setText(Html
+					.fromHtml("<h1>Indica el origen de tu viaje</h1>"));
+			break;
+
+		default:
+			break;
+		}
 	}
 
 }

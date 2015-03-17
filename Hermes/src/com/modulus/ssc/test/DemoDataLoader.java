@@ -8,10 +8,12 @@ import android.util.Log;
 
 import com.modulus.ssc.dao.DSEmpresa;
 import com.modulus.ssc.dao.DSLinea;
+import com.modulus.ssc.dao.DSParada;
 import com.modulus.ssc.dao.DSRecorrido;
 import com.modulus.ssc.dao.DSRecorridoPunto;
 import com.modulus.ssc.model.Empresa;
 import com.modulus.ssc.model.Linea;
+import com.modulus.ssc.model.Parada;
 import com.modulus.ssc.model.Recorrido;
 import com.modulus.ssc.model.RecorridoPunto;
 import com.modulus.ssc.view.ActivityMain;
@@ -25,12 +27,14 @@ public class DemoDataLoader {
 	DSLinea dsLinea;
 	DSRecorrido dsRecorrido;
 	DSRecorridoPunto dsRecorridoPunto;
+	DSParada dsParada;
 
 	public DemoDataLoader(Context context) {
 		dsEmpresa = new DSEmpresa(context);
 		dsLinea = new DSLinea(context);
 		dsRecorrido = new DSRecorrido(context);
 		dsRecorridoPunto = new DSRecorridoPunto(context);
+		dsParada = new DSParada(context);
 	}
 
 	private void crearEmpresas() {
@@ -61,7 +65,7 @@ public class DemoDataLoader {
 		dsLinea.open();
 		long id = dsLinea.create(linea);
 		linea.setId(id);
-		
+
 		lineas.add(linea);
 
 		Log.v(ActivityMain.TAG_SSC, "Insertando linea " + linea.getNumero()
@@ -107,11 +111,27 @@ public class DemoDataLoader {
 		dsRecorridoPunto.close();
 	}
 
-	public void load() {
-		crearEmpresas();
-		crearLineas();
-		 crearRecorridos();
+	private void crearParadas() {
 
+		Parada parada = new Parada();
+		parada.setLat(-27.445140);
+		parada.setLng(-58.972996);
+		//Se cargara unicamente un recorrido dummy para portar el id_recorrido
+		Recorrido recorrido = new Recorrido();
+		recorrido.setId(1);
+		parada.setRecorrido(recorrido);
+		dsParada.open();
+		dsParada.create(parada);
+		dsParada.close();
+		
+
+	}
+
+	public void load() {
+		// crearEmpresas();
+		// crearLineas();
+		// crearRecorridos();
+		crearParadas();
 	}
 
 }

@@ -66,7 +66,7 @@ public class DSLinea extends DSGenerico<Linea> {
 		
 		DSRecorrido dsRecorrido = new DSRecorrido(context);
 		dsRecorrido.open();
-		List<Recorrido> recorridos =  dsRecorrido.getByLinea(linea.getId());
+		List<Recorrido> recorridos =  dsRecorrido.getByLinea(linea);
 		//TODO:En el futuro, permitir varios recorridos por linea
 		linea.setRecorrido(recorridos.get(0));
 
@@ -82,6 +82,9 @@ public class DSLinea extends DSGenerico<Linea> {
 	}
 
 	private Linea cursorTo(Cursor cursor) {
+		
+		//TODO: !!! agregar aqui un dsrecorrido get by linea y devolver la linea con recorrido 
+		
 		Linea linea = new Linea();
 		linea.setId(cursor.getLong(0));
 		linea.setNumero(cursor.getString(1));
@@ -91,11 +94,17 @@ public class DSLinea extends DSGenerico<Linea> {
 		DSEmpresa dsEmpresa = new DSEmpresa(context);
 		dsEmpresa.open();
 		Empresa empresa = dsEmpresa.getById(idEmpresa);
-		Log.v(ActivityMain.TAG_SSC,
-				"Se encontro la empresa " + empresa.getNombre()
-						+ " para la linea " + linea.getNumero());
 		linea.setEmpresa(empresa);
 		dsEmpresa.close();
+		
+		DSRecorrido dsRecorrido =  new DSRecorrido(context);
+		dsRecorrido.open();
+		List<Recorrido> recorridos = dsRecorrido.getByLinea(linea);
+		if (recorridos != null && recorridos.size() >0){
+			linea.setRecorrido(recorridos.get(0));
+		}
+		dsRecorrido.close();
+		
 		return linea;
 	}
 
