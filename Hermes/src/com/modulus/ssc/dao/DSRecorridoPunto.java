@@ -36,7 +36,7 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 
 	@Override
 	public List<RecorridoPunto> getAll() {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
@@ -86,13 +86,13 @@ public class DSRecorridoPunto extends DSGenerico<RecorridoPunto> {
 
 	@Override
 	public RecorridoPunto getById(long id) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
 	@Override
 	public void delete(RecorridoPunto entity) {
-		// TODO Auto-generated method stub
+	
 
 	}
 

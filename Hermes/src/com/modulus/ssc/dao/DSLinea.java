@@ -31,13 +31,13 @@ public class DSLinea extends DSGenerico<Linea> {
 	private String[] allColumns = { COL_ID, COL_NUMERO, COL_RAMAL,
 			COL_EMPRESA_FK };
 
-	// TODO: revisar si es necesario sobreescribir el metodo heredado
+	
 	public DSLinea(Context context) {
 		super(context);
 
 	}
 
-	// TODO: revisar
+	
 	public List<Linea> getAll() {
 		List<Linea> lineas = new ArrayList<Linea>();
 		Cursor cursor = db.query(TABLE_LINEAS, allColumns, null, null, null,
@@ -67,7 +67,7 @@ public class DSLinea extends DSGenerico<Linea> {
 		DSRecorrido dsRecorrido = new DSRecorrido(context);
 		dsRecorrido.open();
 		List<Recorrido> recorridos =  dsRecorrido.getByLinea(linea);
-		//TODO:En el futuro, permitir varios recorridos por linea
+		//Se prevee permitir varios recorridos por linea
 		linea.setRecorrido(recorridos.get(0));
 
 		return linea;
@@ -81,10 +81,7 @@ public class DSLinea extends DSGenerico<Linea> {
 		return db.insert(TABLE_LINEAS, null, values);
 	}
 
-	private Linea cursorTo(Cursor cursor) {
-		
-		//TODO: !!! agregar aqui un dsrecorrido get by linea y devolver la linea con recorrido 
-		
+	private Linea cursorTo(Cursor cursor) { 
 		Linea linea = new Linea();
 		linea.setId(cursor.getLong(0));
 		linea.setNumero(cursor.getString(1));

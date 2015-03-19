@@ -37,7 +37,7 @@ public class DSParada extends DSGenerico<Parada> {
 
 	@Override
 	public List<Parada> getAll() {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
@@ -52,13 +52,13 @@ public class DSParada extends DSGenerico<Parada> {
 
 	@Override
 	public Parada getById(long id) {
-		// TODO Auto-generated method stub
+	
 		return null;
 	}
 
 	@Override
 	public void delete(Parada entity) {
-		// TODO Auto-generated method stub
+		
 	}
 
 	private Parada cursorTo(Cursor cursor) {

@@ -30,12 +30,10 @@ public class DSRecorrido extends DSGenerico<Recorrido> {
 
 	public DSRecorrido(Context context) {
 		super(context);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public List<Recorrido> getAll() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -48,18 +46,18 @@ public class DSRecorrido extends DSGenerico<Recorrido> {
 
 	@Override
 	public Recorrido getById(long id) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
 	@Override
 	public void delete(Recorrido entity) {
-		// TODO Auto-generated method stub
+		
 	}
 
 	public List<Recorrido> getByLinea(Linea linea) {
-		//TODO: revisar que la linea se este pasando por referencia
-		//TODO: hacer que se devuelva la lista de paradas y puntos del recorrido
+		
+	
 		List<Recorrido> recorridos = new ArrayList<Recorrido>();
 		Cursor cursor = db.query(TABLE_RECORRIDOS, allColumns, null, null,
 				null, null, null);

@@ -1,9 +1,19 @@
 package com.modulus.ssc.view;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+
+import org.json.JSONObject;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -21,20 +31,31 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.modulus.ssc.R;
+import com.modulus.ssc.bl.DirectionsJSONParser;
 import com.modulus.ssc.dao.DSLinea;
 import com.modulus.ssc.model.Linea;
+import com.modulus.ssc.model.Parada;
 import com.modulus.ssc.model.Recorrido;
 import android.app.Activity;
+import android.graphics.Color;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
+//TODO: implementar patron estado
+//TODO: una vez recomendada la linea, dibujar recorrido segun esta almacenado en svr
+//TODO: una vez recomendadas las paradas, mostrarlas en el mapa y el recorrido desde el origen y hasta destino
+//TODO: analizar si es neesaria la funcionalidad de elegir linea manualmente
 public class ActivityMain extends Activity implements ConnectionCallbacks,
-		OnConnectionFailedListener, LocationListener, OnMapClickListener,
+
+OnConnectionFailedListener, LocationListener, OnMapClickListener,
 		OnClickListener {
 	public static final String TAG_SSC = "Modulus";
 	private GoogleApiClient mGoogleApiClient;
@@ -46,14 +67,19 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 	private boolean mRequestingLocationUpdates = true;
 	// Momento de la ultima actualizacion de la posicion
 	private String mLastUpdateTime;
-	private PolygonOptions rectOptions;
+	// private PolygonOptions rectOptions;
 	private MarkerOptions markerOptions = new MarkerOptions();
+	private Marker markerOrig;
 	private MarkerOptions markerOptionsDes = new MarkerOptions();
+	private Marker markerDes;
+	private MarkerOptions markerOptionsPO = new MarkerOptions();
+	private Marker markerPO;
+	private MarkerOptions markerOptionsPD = new MarkerOptions();
+	private Marker markerPD;
 
 	private static final int ESTADO_DEF_ORIGEN = 0;
 	private static final int ESTADO_DEF_DESTINO = 1;
-	private Marker markerDes;
-	private Marker markerOrig;
+	private static final int ESTADO_REC_LINEA = 2;
 
 	private float defZoom = 15.2f;
 
@@ -84,8 +110,8 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 		mGoogleApiClient.connect();
 
 		lineas = obtenerLineas();
-		Linea linea = lineas.get(0);
-		rectOptions = obtenerPoligono(linea.getRecorrido());
+		// Linea linea = lineas.get(0);
+		// rectOptions = obtenerPoligono(linea.getRecorrido());
 
 	}
 
@@ -114,7 +140,17 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 		markerDes = myMap.addMarker(markerOptionsDes);
 		markerDes.setTitle("Destino");
 
-		myMap.addPolygon(rectOptions);
+		// Marcador Parada Origen
+		markerOptionsPO.position(latLngDef);
+		markerPO = myMap.addMarker(markerOptionsPO);
+		markerPO.setTitle("Subida");
+
+		// Marcador Parada Destino
+		markerOptionsPD.position(latLngDef);
+		markerPD = myMap.addMarker(markerOptionsPD);
+		markerPD.setTitle("Descenso");
+
+		// myMap.addPolygon(rectOptions);
 	}
 
 	protected synchronized void buildGoogleApiClient() {
@@ -152,13 +188,11 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 
 	@Override
 	public void onConnectionSuspended(int arg0) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void onConnectionFailed(ConnectionResult arg0) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -204,8 +238,49 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 			txtInstrucciones.setText(Html
 					.fromHtml("<h1>Indica el destino de tu viaje</h1>"));
 			break;
+
 		case ESTADO_DEF_DESTINO:
 			markerDes.setPosition(latlng);
+
+			// Recomendar Linea
+			Linea lineaRecomendada = Linea.recomendarLinea(lineas,
+					markerOrig.getPosition(), markerDes.getPosition());
+
+			// Dibujar parada origen
+			Parada pOrigen = lineaRecomendada.recomendarParada(markerOrig
+					.getPosition());
+			markerPO.setPosition(new LatLng(pOrigen.getLat(), pOrigen.getLng()));
+
+			// Dibujar parada destino
+			Parada pDestino = lineaRecomendada.recomendarParada(markerDes
+					.getPosition());
+			markerPO.setPosition(new LatLng(pDestino.getLat(), pDestino
+					.getLng()));
+
+			// Mover camara a parada origen
+			// punto medio entre paradaOrigen y Origen, ajustando zoom
+			animateCameraTo(pOrigen.getLat(), pOrigen.getLng());
+
+			// Mostrar caminata hasta la parada de origen
+			// Getting URL to the Google Directions API
+			String url = getDirectionsUrl(markerOrig.getPosition(),
+					markerPO.getPosition());
+			DownloadTask downloadTask = new DownloadTask();
+			// Start downloading json data from Google Directions API
+			downloadTask.execute(url);
+
+			/*
+			 * 
+			 * TODO: hacer que funcione para dar dos direcciones, seguramente
+			 * esta intentando usar los mismos objetos para ambas rutas
+			 * //Mostrar caminata desde la parada de destino // Getting URL to
+			 * the Google Directions API String url2 =
+			 * getDirectionsUrl(markerDes.getPosition(),
+			 * markerPD.getPosition()); DownloadTask downloadTask2 = new
+			 * DownloadTask(); // Start downloading json data from Google
+			 * Directions API downloadTask.execute(url);
+			 */
+
 			break;
 
 		default:
@@ -308,6 +383,191 @@ public class ActivityMain extends Activity implements ConnectionCallbacks,
 		default:
 			break;
 		}
+	}
+
+	/**
+	 * Source:
+	 * https://jigarlikes.wordpress.com/2013/04/26/driving-distance-and-travel
+	 * -time-duration-between-two-locations-in-google-map-android-api-v2/
+	 */
+
+	private String getDirectionsUrl(LatLng origin, LatLng dest) {
+		// Origin of route
+		String str_origin = "origin=" + origin.latitude + ","
+				+ origin.longitude;
+
+		// Destination of route
+		String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+
+		// Sensor enabled
+		String sensor = "sensor=false";
+
+		// Building the parameters to the web service
+		String parameters = str_origin + "&" + str_dest + "&" + sensor;
+
+		// Output format
+		String output = "json";
+
+		// Building the url to the web service
+		String url = "https://maps.googleapis.com/maps/api/directions/"
+				+ output + "?" + parameters;
+
+		return url;
+	}
+
+	/** A method to download json data from url */
+	private String downloadUrl(String strUrl) throws IOException {
+		String data = "";
+		InputStream iStream = null;
+		HttpURLConnection urlConnection = null;
+		try {
+			URL url = new URL(strUrl);
+
+			// Creating an http connection to communicate with url
+			urlConnection = (HttpURLConnection) url.openConnection();
+
+			// Connecting to url
+			urlConnection.connect();
+
+			// Reading data from url
+			iStream = urlConnection.getInputStream();
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					iStream));
+
+			StringBuffer sb = new StringBuffer();
+
+			String line = "";
+			while ((line = br.readLine()) != null) {
+				sb.append(line);
+			}
+
+			data = sb.toString();
+
+			br.close();
+
+		} catch (Exception e) {
+			Log.d("Exception while downloading url", e.toString());
+		} finally {
+			iStream.close();
+			urlConnection.disconnect();
+		}
+		return data;
+	}
+
+	// Fetches data from url passed
+	private class DownloadTask extends AsyncTask<String, Void, String> {
+		// Downloading data in non-ui thread
+		@Override
+		protected String doInBackground(String... url) {
+
+			// For storing data from web service
+			String data = "";
+
+			try {
+				// Fetching the data from web service
+				data = downloadUrl(url[0]);
+			} catch (Exception e) {
+				Log.d("Background Task", e.toString());
+			}
+			return data;
+		}
+
+		// Executes in UI thread, after the execution of
+		// doInBackground()
+		@Override
+		protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+
+			ParserTask parserTask = new ParserTask();
+
+			// Invokes the thread for parsing the JSON data
+			parserTask.execute(result);
+
+		}
+	}
+
+	/** A class to parse the Google Places in JSON format */
+	private class ParserTask extends
+			AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+
+		// Parsing the data in non-ui thread
+		@Override
+		protected List<List<HashMap<String, String>>> doInBackground(
+				String... jsonData) {
+			JSONObject jObject;
+			List<List<HashMap<String, String>>> routes = null;
+
+			try {
+				jObject = new JSONObject(jsonData[0]);
+				DirectionsJSONParser parser = new DirectionsJSONParser();
+
+				// Starts parsing data
+				routes = parser.parse(jObject);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return routes;
+		}
+
+		// Executes in UI thread, after the parsing process
+		@Override
+		protected void onPostExecute(List<List<HashMap<String, String>>> result) {
+			ArrayList<LatLng> points = null;
+			PolylineOptions lineOptions = null;
+			MarkerOptions markerOptions = new MarkerOptions();
+			String distance = "";
+			String duration = "";
+
+			// Traversing through all the routes
+			for (int i = 0; i < result.size(); i++) {
+				points = new ArrayList<LatLng>();
+				lineOptions = new PolylineOptions();
+
+				// Fetching i-th route
+				List<HashMap<String, String>> path = result.get(i);
+
+				// Fetching all the points in i-th route
+				for (int j = 0; j < path.size(); j++) {
+					HashMap<String, String> point = path.get(j);
+
+					if (j == 0) { // Get distance from the list
+						distance = point.get("distance");
+						continue;
+					} else if (j == 1) { // Get duration from the list
+						duration = point.get("duration");
+						continue;
+					}
+					double lat = Double.parseDouble(point.get("lat"));
+					double lng = Double.parseDouble(point.get("lng"));
+					LatLng position = new LatLng(lat, lng);
+					points.add(position);
+				}
+
+				// Adding all the points in the route to LineOptions
+				lineOptions.addAll(points);
+				lineOptions.width(2);
+				lineOptions.color(Color.RED);
+			}
+
+			// tvDistanceDuration.setText("Distance:" + distance + ", Duration:"
+			// + duration);
+
+			// Drawing polyline in the Google Map for the i-th route
+			myMap.addPolyline(lineOptions);
+		}
+	}
+
+	// @Override
+	// public boolean onCreateOptionsMenu(Menu menu)
+	// {
+	// // Inflate the menu; this adds items to the action bar if it is present.
+	// this.getMenuInflater().inflate(R.menu.main, menu);
+	// return true;
+	// }
+
+	private void dibujarRuta(LatLng origen, LatLng destino) {
+
 	}
 
 }
