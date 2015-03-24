@@ -6,7 +6,7 @@ import java.util.List;
 import com.modulus.ssc.model.Empresa;
 import com.modulus.ssc.model.Linea;
 import com.modulus.ssc.model.Recorrido;
-import com.modulus.ssc.view.ActivityMain;
+import com.modulus.ssc.view.ActivityMain1;
 
 import android.content.ContentValues;
 import android.content.Context;

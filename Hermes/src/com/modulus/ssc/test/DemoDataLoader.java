@@ -16,7 +16,7 @@ import com.modulus.ssc.model.Linea;
 import com.modulus.ssc.model.Parada;
 import com.modulus.ssc.model.Recorrido;
 import com.modulus.ssc.model.RecorridoPunto;
-import com.modulus.ssc.view.ActivityMain;
+import com.modulus.ssc.view.ActivityMain1;
 
 public class DemoDataLoader {
 
@@ -48,7 +48,7 @@ public class DemoDataLoader {
 			long id = dsEmpresa.create(empresa);
 			empresa.setId(id);
 			empresas.add(empresa);
-			Log.v(ActivityMain.TAG_SSC,
+			Log.v(ActivityMain1.TAG_SSC,
 					"Insertando empresa " + empresa.getNombre() + "con el id "
 							+ empresa.getId());
 		}
@@ -68,7 +68,7 @@ public class DemoDataLoader {
 
 		lineas.add(linea);
 
-		Log.v(ActivityMain.TAG_SSC, "Insertando linea " + linea.getNumero()
+		Log.v(ActivityMain1.TAG_SSC, "Insertando linea " + linea.getNumero()
 				+ " " + linea.getRamal() + " con el id " + id);
 
 	}
